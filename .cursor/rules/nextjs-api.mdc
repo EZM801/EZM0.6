@@ -1,0 +1,77 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# Next.js App Router API Route Guidelines
+
+# Route Parameters
+- Always include all route parameters in the type definition:
+  ```typescript
+  { params }: { params: { moveId: string; layoutId: string } }
+  ```
+- Validate parameters exist before using them
+- Return 400 error if parameters are missing
+
+# Request Validation
+- Use zod for validation
+- Validate all required fields
+- Return 400 error for validation failures
+
+# Error Handling
+- Use consistent error format:
+  ```typescript
+  {
+    success: false,
+    error: {
+      message: string,
+      code: string
+    }
+  }
+  ```
+
+# Response Format
+- Use consistent success format:
+  ```typescript
+  {
+    success: true,
+    data: any
+  }
+  ```
+
+# Type Safety
+- Use proper TypeScript types
+- Never use any
+- Use type guards for runtime checks
+
+# Additional Guidelines
+- Always validate request body exists
+- Validate required fields match schema
+- Use proper error responses (400 for validation, 401 for auth, 404 for not found)
+- Include descriptive error messages
+- Include all necessary relations in response
+- Handle unique constraints properly
+- Match all schema fields exactly
+- Handle optional fields correctly
+- Respect default values
+- Include all required relations
+- Never modify schema to match code - always adapt code to match schema
+- Use exact field names from schema
+- Handle type conversions properly
+- Use try/catch blocks
+- Log errors with context
+- Return appropriate status codes
+- Include error details in response
+- Use consistent error response format
+- Use consistent response structure
+- Use proper HTTP status codes
+- Check session in every route
+- Verify user access to resources
+- Handle unauthorized access properly
+- Use consistent auth error format
+- Use proper TypeScript types
+- Validate input types
+- Handle type conversions properly
+- Use type guards for runtime type checking
+- Never use any type
+- Use proper type mapping between frontend and backend 

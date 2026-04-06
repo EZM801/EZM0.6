@@ -1,0 +1,70 @@
+# EZM API Structure Guidelines
+
+# Directory Structure
+- Follow RESTful conventions for API routes
+- Use nested routes for related resources
+- Keep route handlers focused and single-responsibility
+- Group related endpoints logically
+
+# Move Resources
+- /api/moves/[moveId]/layouts - Handle move layouts
+- /api/moves/[moveId]/stops - Handle move stops
+- /api/moves/[moveId]/items - Handle move items
+
+# Layout Resources
+- /api/moves/[moveId]/layouts - List/Create layouts
+- /api/moves/[moveId]/layouts/[layoutId] - Single layout operations
+- /api/moves/[moveId]/layouts/[layoutId]/rooms - Layout rooms
+- /api/moves/[moveId]/stops/[stopId]/layouts - Stop layouts
+
+# Stop Resources
+- /api/moves/[moveId]/stops - List/Create stops
+- /api/moves/[moveId]/stops/[stopId] - Single stop operations
+- /api/moves/[moveId]/stops/[stopId]/layouts - Stop layouts
+- /api/moves/[moveId]/stops/[stopId]/items - Stop items
+
+# API Implementation
+- Use Next.js App Router conventions
+- Implement proper error handling
+- Use Prisma for database operations
+- Validate all inputs
+- Return consistent response formats
+- Use proper HTTP status codes
+
+# Response Format
+```typescript
+{
+  success: boolean;
+  data?: any;
+  error?: {
+    message: string;
+    code?: string;
+    details?: any;
+  };
+}
+```
+
+# Error Handling
+- 400: Bad Request (validation errors)
+- 401: Unauthorized (auth required)
+- 403: Forbidden (no access)
+- 404: Not Found
+- 409: Conflict (unique constraint)
+- 500: Internal Server Error
+
+# Authentication
+- Check session in every route
+- Verify user access to resources
+- Handle unauthorized access properly
+
+# Prisma Relations
+- Use proper relation syntax
+- Include all necessary relations
+- Handle unique constraints
+- Use transactions when needed
+
+# Schema Compliance
+- Match all schema fields
+- Handle optional fields
+- Respect default values
+- Include required relations 

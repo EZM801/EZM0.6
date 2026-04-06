@@ -1,0 +1,118 @@
+# EZM0.2 Project Cursor Rules
+
+# Project Structure
+- Follow Next.js 13+ App Router conventions
+- Keep components in appropriate feature directories
+- Maintain consistent file naming across the application
+
+# Naming Conventions
+- Components: PascalCase (e.g., MoveCard.tsx, AddressForm.tsx)
+- Pages: page.tsx (Next.js convention)
+- API Routes: route.ts (Next.js convention)
+- Utilities: camelCase (e.g., formatDate.ts, validateAddress.ts)
+- Types/Interfaces: PascalCase with Type/Interface suffix (e.g., MoveType.ts, UserInterface.ts)
+- Constants: UPPER_SNAKE_CASE (e.g., API_ENDPOINTS.ts, STATUS_CODES.ts)
+
+# Component Guidelines
+- Use functional components with TypeScript
+- Implement proper prop typing
+- Follow atomic design principles (atoms, molecules, organisms)
+- Reuse existing components from the project before creating new ones
+- Keep components focused and single-responsibility
+
+# API Implementation
+- Follow RESTful conventions
+- Implement proper error handling
+- Use Prisma for database operations
+- Validate input data
+- Return consistent response formats
+- Use proper HTTP status codes
+
+# Database Operations
+- Use Prisma Client for all database operations
+- Implement proper error handling for database operations
+- Follow the existing Prisma schema structure
+- Use transactions when necessary
+- Implement proper indexing as defined in schema
+
+# State Management
+- Use React Query for server state
+- Use React Context for global UI state
+- Use local state for component-specific state
+- Implement proper loading and error states
+
+# Styling
+- Use Tailwind CSS for styling
+- Follow existing design system
+- Maintain consistent spacing and typography
+- Use responsive design principles
+- Keep styles modular and reusable
+
+# Code Quality
+- Write clean, self-documenting code
+- Add comments for complex logic
+- Use TypeScript strictly
+- Implement proper error boundaries
+- Follow ESLint and Prettier configurations
+
+# Testing
+- Write unit tests for critical components
+- Implement API route tests
+- Test error scenarios
+- Maintain good test coverage
+
+# Security
+- Implement proper authentication
+- Validate all user inputs
+- Sanitize data before database operations
+- Use environment variables for sensitive data
+- Follow OWASP security guidelines
+
+# Performance
+- Implement proper loading states
+- Use proper image optimization
+- Implement proper caching strategies
+- Optimize database queries
+- Use proper code splitting
+
+# Git Workflow
+- Write meaningful commit messages
+- Keep commits atomic and focused
+- Follow conventional commits format
+- Review code before committing
+- Keep branches up to date
+
+# Documentation
+- Document complex logic
+- Keep README up to date
+- Document API endpoints
+- Document component props
+- Document database schema changes
+
+# Accessibility
+- Use semantic HTML
+- Implement proper ARIA labels
+- Ensure proper color contrast
+- Support keyboard navigation
+- Test with screen readers
+
+# Error Handling
+- Implement proper error boundaries
+- Show user-friendly error messages
+- Log errors appropriately
+- Handle edge cases
+- Implement proper fallbacks
+
+# Performance Monitoring
+- Monitor API response times
+- Track component render times
+- Monitor database query performance
+- Track user interactions
+- Monitor error rates
+
+# Code Review Guidelines
+- Review for security issues
+- Check for performance implications
+- Verify accessibility compliance
+- Ensure proper error handling
+- Validate against existing patterns 

@@ -1,0 +1,133 @@
+# Theme Implementation Guidelines
+
+## Theme Architecture
+- Use a single source of truth for theme management
+- Implement theme at the root level only
+- Use data attributes instead of classes for theme switching
+- Keep theme state in a dedicated context provider
+
+## Theme Provider Structure
+```typescript
+// Correct implementation
+"use client"
+
+import { createContext, useContext, useEffect, useState } from "react"
+
+type Theme = "light" | "dark"
+
+const ThemeProviderContext = createContext<{
+  theme: Theme
+  setTheme: (theme: Theme) => void
+}>({
+  theme: "light",
+  setTheme: () => null,
+})
+
+export function ThemeProvider({ children }: { children: React.ReactNode }) {
+  const [mounted, setMounted] = useState(false)
+  const [theme, setTheme] = useState<Theme>("light")
+
+  useEffect(() => {
+    setMounted(true)
+    const storedTheme = localStorage.getItem("theme") as Theme
+    if (storedTheme) setTheme(storedTheme)
+  }, [])
+
+  useEffect(() => {
+    if (!mounted) return
+    document.body.setAttribute("data-theme", theme)
+    localStorage.setItem("theme", theme)
+  }, [theme, mounted])
+
+  return (
+    <ThemeProviderContext.Provider value={{ theme, setTheme }}>
+      {children}
+    </ThemeProviderContext.Provider>
+  )
+}
+```
+
+## CSS Implementation
+```css
+/* Correct implementation */
+@layer base {
+  :root {
+    --background: 150 30% 98%;
+    --foreground: 150 10% 20%;
+    /* other light theme variables */
+  }
+
+  [data-theme="dark"] {
+    --background: 150 10% 95%;
+    --foreground: 150 10% 20%;
+    /* other dark theme variables */
+  }
+}
+```
+
+## DO NOT
+- ❌ Add theme classes to HTML elements
+- ❌ Implement multiple theme providers
+- ❌ Force theme changes in components
+- ❌ Use theme classes for styling
+- ❌ Mix theme implementation approaches
+
+## DO
+- ✅ Use data-theme attribute for theme switching
+- ✅ Keep theme state in a single context
+- ✅ Implement theme at the root level only
+- ✅ Use CSS variables for theme values
+- ✅ Handle theme changes in the provider only
+
+## Theme Usage in Components
+```typescript
+// Correct usage
+"use client"
+
+import { useTheme } from "@/components/theme-provider"
+
+export function ThemeToggle() {
+  const { theme, setTheme } = useTheme()
+  
+  return (
+    <button onClick={() => setTheme(theme === "light" ? "dark" : "light")}>
+      Toggle Theme
+    </button>
+  )
+}
+```
+
+## Error Prevention
+1. Always check for mounted state before accessing window/document
+2. Use proper TypeScript types for theme values
+3. Implement proper error boundaries
+4. Handle theme persistence safely
+5. Test theme switching in different scenarios
+
+## Testing Requirements
+- Test theme persistence across page reloads
+- Verify theme changes don't cause layout shifts
+- Ensure theme works with SSR
+- Test theme with different components
+- Verify theme state consistency
+
+## Performance Considerations
+- Minimize theme-related re-renders
+- Use CSS variables for theme values
+- Implement proper memoization
+- Avoid unnecessary theme state updates
+- Optimize theme-related CSS
+
+## Accessibility
+- Ensure proper color contrast in both themes
+- Test theme with screen readers
+- Maintain consistent focus states
+- Keep text readable in all themes
+- Support system theme preferences
+
+## Maintenance
+- Document theme-related changes
+- Keep theme implementation simple
+- Follow consistent naming conventions
+- Update theme documentation
+- Review theme implementation regularly 

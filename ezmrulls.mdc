@@ -1,0 +1,43 @@
+---
+description: 
+globs: 
+alwaysApply: true
+---
+# EZM0.2 Project Cursor Rules
+
+# Project Structure
+- Follow Next.js 13+ App Router conventions
+- Keep components in appropriate feature directories
+- Maintain consistent file naming across the application
+
+# Dynamic Route Parameters
+- Use consistent parameter names across all dynamic routes
+- For top-level routes, always use 'id' as the parameter name
+- For nested routes, use descriptive parameter names to avoid conflicts
+- Examples:
+  - Top-level: /api/moves/[id]/route.ts
+  - Nested: /api/move/my/[moveId]/items/[itemId]/route.ts
+- Avoid using resource-specific names in top-level routes
+- Keep parameter names consistent in route handlers and API calls
+- Never repeat the same parameter name within a single path
+
+# Naming Conventions
+- Components: PascalCase (e.g., MoveCard.tsx, AddressForm.tsx)
+- Pages: page.tsx (Next.js convention)
+- API Routes: route.ts (Next.js convention)
+- Utilities: camelCase (e.g., formatDate.ts, validateAddress.ts)
+- Types/Interfaces: PascalCase with Type/Interface suffix (e.g., MoveType.ts, UserInterface.ts)
+- Constants: UPPER_SNAKE_CASE (e.g., API_ENDPOINTS.ts, STATUS_CODES.ts)
+
+# Prisma Schema Adherence
+- The Prisma schema (schema.prisma) is the source of truth for all database-related code
+- Never modify the schema to match the code - always adapt the code to match the schema
+- Use exact field names and relations as defined in the schema
+- When in doubt about field names or relations, always check schema.prisma first
+- API routes and frontend logic must conform to the schema's structure
+- Use Prisma's generated types to ensure type safety and schema compliance
+- If a field or relation doesn't exist in the schema, it cannot be used in the code
+- All database operations must match the schema's model definitions exactly
+
+# Component Guidelines
+// ... existing code ... 

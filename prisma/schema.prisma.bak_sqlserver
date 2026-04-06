@@ -1,0 +1,861 @@
+generator client {
+  provider = "prisma-client-js"
+  output   = "../node_modules/.prisma/client"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider     = "postgresql"
+  url          = env("DATABASE_URL")
+  relationMode = "prisma"
+}
+
+model User {
+  id                  String             @id @default(cuid()) @db.UniqueIdentifier
+  email               String             @unique @db.NVarChar(255)
+  password            String             @db.NVarChar(255)
+  firstName           String?            @db.NVarChar(100)
+  lastName            String?            @db.NVarChar(100)
+  accountType         String             @default("individual") @db.NVarChar(50)
+  role                String?            @db.NVarChar(50)
+  companyId           String?            @db.UniqueIdentifier
+  userType            String             @db.NVarChar(50)
+  isActive            Boolean            @default(true)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  phoneNumber         String?            @db.NVarChar(15)
+  companyCode         String?            @db.NVarChar(50)
+  emailVerified       DateTime?
+  failedLoginAttempts Int                @default(0)
+  lastLoginAttempt    DateTime?
+  isVerified          Boolean            @default(false)
+
+  // Relations
+  moves               Move[]             @relation("UserMoves")
+  company             Company?           @relation("UserCompany", fields: [companyId], references: [id])
+  tasks               Task[]             @relation("UserTasks")
+  collaboratedMoves   MoveCollaborator[]
+  createdMoves        Move[]             @relation("CreatedMoves")
+  assignedTasks       Task[]             @relation("AssignedTasks")
+  adminAt             Company?           @relation("CompanyAdmins", fields: [companyId], references: [id], map: "UserCompanyAdmin")
+  foremanAt           Company?           @relation("CompanyForemen", fields: [companyId], references: [id], map: "UserCompanyForeman")
+  employeeAt          Company?           @relation("CompanyEmployees", fields: [companyId], references: [id], map: "UserCompanyEmployee")
+
+  @@index([accountType])
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([email])
+  @@index([isActive])
+  @@index([isVerified])
+  @@index([role])
+  @@index([userType])
+  @@map("_User")
+}
+
+model VerificationToken {
+  id         String   @id @default(uuid()) @db.UniqueIdentifier
+  identifier String   @unique @db.NVarChar(255)
+  token      String   @unique @db.NVarChar(255)
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  userId     String?  @db.UniqueIdentifier
+
+  @@index([createdAt])
+  @@index([expires])
+  @@index([identifier])
+  @@index([token])
+  @@index([userId])
+}
+
+model Company {
+  id           String      @id @default(uuid()) @db.UniqueIdentifier
+  name         String      @unique @db.NVarChar(255)
+  address      String?     @db.NVarChar(255)
+  phoneNumber  String?     @db.NVarChar(15)
+  companyCode  String      @unique @db.NVarChar(50)
+  businessType String?     @db.NVarChar(100)
+  isActive     Boolean     @default(true)
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  // Relations
+  users        User[]      @relation("UserCompany")
+  moves        Move[]
+  equipment    Equipment[]
+  supplies     Supply[]
+  vehicles     Vehicle[]
+  admins       User[]      @relation("CompanyAdmins")
+  foremen      User[]      @relation("CompanyForemen")
+  employees    User[]      @relation("CompanyEmployees")
+
+  @@index([companyCode])
+  @@index([createdAt])
+  @@index([isActive])
+  @@map("_Company")
+}
+
+model Move {
+  id               String             @id @default(uuid()) @db.UniqueIdentifier
+  name             String             @db.NVarChar(255)
+  description      String?
+  status           String             @default("draft") @db.NVarChar(50)
+  userId           String             @db.UniqueIdentifier
+  companyId        String?            @db.UniqueIdentifier
+  createdAt        DateTime           @default(now())
+  updatedAt        DateTime
+  startDate        DateTime?
+  endDate          DateTime?
+  moveType         String             @db.NVarChar(50)
+  isTemplate       Boolean            @default(false)
+  templateName     String?            @db.NVarChar(255)
+  templateCategory String?            @db.NVarChar(100)
+  visibility       String             @default("private") @db.NVarChar(50)
+  fromAddressId    String?            @db.UniqueIdentifier
+  toAddressId      String?            @db.UniqueIdentifier
+  user             User               @relation("UserMoves", fields: [userId], references: [id], map: "MoveUser")
+  company          Company?           @relation(fields: [companyId], references: [id])
+  items            Item[]             @relation("MoveItems")
+  itemLists        ItemList[]
+  tasks            Task[]
+  stops            MoveStop[]
+  collaborators    MoveCollaborator[]
+  fromAddress      Address?           @relation("FromAddress", fields: [fromAddressId], references: [id])
+  toAddress        Address?           @relation("ToAddress", fields: [toAddressId], references: [id])
+  layouts          Layout[]           @relation("MoveLayout")
+  contacts         MoveContact[]
+  equipment        MoveEquipment[]
+  supplies         MoveSupply[]
+  vehicles         MoveVehicle[]
+  qrCodes          QRCode[]
+  createdBy        User               @relation("CreatedMoves", fields: [userId], references: [id], map: "MoveCreator")
+
+  @@index([companyId])
+  @@index([createdAt])
+  @@index([isTemplate])
+  @@index([moveType])
+  @@index([status])
+  @@index([templateCategory])
+  @@index([userId])
+  @@index([visibility])
+}
+
+model MoveCollaborator {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  moveId    String   @db.UniqueIdentifier
+  userId    String   @db.UniqueIdentifier
+  role      String   @default("viewer") @db.NVarChar(50)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  move      Move     @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id])
+
+  @@unique([moveId, userId])
+  @@index([moveId])
+  @@index([userId])
+  @@index([role])
+  @@index([createdAt])
+}
+
+model Address {
+  id                  String         @id @default(uuid()) @db.UniqueIdentifier
+  street              String         @db.NVarChar(255)
+  city                String         @db.NVarChar(100)
+  state               String         @db.NVarChar(50)
+  zipCode             String         @db.NVarChar(20)
+  country             String         @default("US")
+  hasElevator         Boolean        @default(false)
+  floorNumber         Int?
+  specialInstructions String?        @db.NVarChar(Max)
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  
+  // Relations
+  moveFromAddress     CompanyMove?   @relation("MoveFromAddress")
+  moveToAddress       CompanyMove?   @relation("MoveToAddress")
+  fromMoves           Move[]         @relation("FromAddress")
+  toMoves             Move[]         @relation("ToAddress")
+  moveStops           MoveStop[]     @relation("AddressMoveStops")
+
+  @@index([city])
+  @@index([state])
+  @@index([zipCode])
+}
+
+model MoveStop {
+  id             String    @id @default(uuid()) @db.UniqueIdentifier
+  moveId         String    @db.UniqueIdentifier
+  name           String    @db.NVarChar(255)
+  address        String    @db.NVarChar(500)
+  city           String    @db.NVarChar(100)
+  state          String    @db.NVarChar(50)
+  zipCode        String    @db.NVarChar(20)
+  country        String    @db.NVarChar(100)
+  arrivalDate    DateTime?
+  departureDate  DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime
+  addressId      String?   @db.UniqueIdentifier
+  move           Move      @relation(fields: [moveId], references: [id])
+  layouts        Layout[]  @relation("MoveStopLayout")
+  items          Item[]    @relation("MoveStopItems")
+  addressDetails Address?  @relation("AddressMoveStops", fields: [addressId], references: [id])
+
+  @@index([moveId])
+  @@index([createdAt])
+}
+
+model ItemList {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  name        String   @db.NVarChar(255)
+  description String?  @db.NVarChar(Max)
+  moveId      String   @db.UniqueIdentifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  move        Move     @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  items       Item[]
+
+  @@index([name])
+  @@index([createdAt])
+  @@index([moveId])
+}
+
+model Item {
+  id                  String      @id @default(uuid()) @db.UniqueIdentifier
+  name                String      @db.NVarChar(255)
+  description         String?     @db.NVarChar(Max)
+  weight              Float?
+  value               Float?
+  isFragile           Boolean     @default(false)
+  specialInstructions String?     @db.NVarChar(Max)
+  originRoomId        String?     @db.UniqueIdentifier
+  destinationRoomId   String?     @db.UniqueIdentifier
+  stopRoomId          String?     @db.UniqueIdentifier
+  createdAt           DateTime    @default(now())
+  updatedAt           DateTime    @updatedAt
+  itemListId          String      @db.UniqueIdentifier
+  moveId              String?     @db.UniqueIdentifier
+  moveStopId          String?     @db.UniqueIdentifier
+  packingStatus       String?     @default("unpacked")
+  qrCode              String?     @db.NVarChar(255)
+  itemList            ItemList    @relation(fields: [itemListId], references: [id], onDelete: Cascade)
+  qrCodes             QRCode[]
+  photos              ItemPhoto[]
+  move                Move?       @relation("MoveItems", fields: [moveId], references: [id])
+  moveStop            MoveStop?   @relation("MoveStopItems", fields: [moveStopId], references: [id])
+  originRoom          Room?       @relation("OriginRoomItems", fields: [originRoomId], references: [id])
+  destinationRoom     Room?       @relation("DestinationRoomItems", fields: [destinationRoomId], references: [id])
+  stopRoom            Room?       @relation("StopRoomItems", fields: [stopRoomId], references: [id])
+
+  @@index([name])
+  @@index([createdAt])
+  @@index([originRoomId])
+  @@index([destinationRoomId])
+  @@index([stopRoomId])
+  @@index([isFragile])
+  @@index([itemListId])
+  @@index([qrCode])
+}
+
+model UserQRCodes {
+  A String @default(uuid()) @db.UniqueIdentifier
+  B String @default(uuid()) @db.UniqueIdentifier
+
+  @@unique([A, B], map: "_UserQRCodes_AB_unique")
+  @@index([B], map: "_UserQRCodes_B_index")
+  @@map("_UserQRCodes")
+}
+
+model CompanyAddress {
+  companyId String   @default(uuid()) @db.UniqueIdentifier
+  addressId String   @default(uuid()) @db.UniqueIdentifier
+  createdAt DateTime @default(now())
+
+  @@id([companyId, addressId])
+  @@index([addressId])
+  @@index([companyId])
+}
+
+model Contact {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  firstName   String   @db.NVarChar(100)
+  lastName    String   @db.NVarChar(100)
+  email       String   @db.NVarChar(255)
+  phoneNumber String   @db.NVarChar(15)
+  type        String   @db.NVarChar(50)
+  notes       String?  @db.NVarChar(Max)
+  isActive    Boolean  @default(true)
+  userId      String   @db.UniqueIdentifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@index([createdAt])
+  @@index([email])
+  @@index([firstName])
+  @@index([isActive])
+  @@index([lastName])
+  @@index([phoneNumber])
+  @@index([type])
+  @@index([userId])
+}
+
+model Equipment {
+  id              String                @id @default(cuid()) @db.UniqueIdentifier
+  companyId       String                @db.UniqueIdentifier
+  name            String                @db.NVarChar(255)
+  type            String                @db.NVarChar(100)
+  description     String?               @db.NVarChar(Max)
+  isAvailable     Boolean               @default(true)
+  imageUrl        String?               @db.NVarChar(Max)
+  qrCode          String?               @db.NVarChar(255)
+  status          String                @default("ACTIVE") @db.NVarChar(50)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  
+  // Relations
+  company         Company               @relation(fields: [companyId], references: [id])
+  moves           CompanyMoveEquipment[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isAvailable])
+  @@index([status])
+  @@index([qrCode])
+}
+
+model Inventory {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  name        String   @db.NVarChar(255)
+  description String?  @db.NVarChar(Max)
+  moveId      String   @db.UniqueIdentifier
+  status      String   @db.NVarChar(50)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime
+
+  @@index([createdAt])
+  @@index([moveId])
+  @@index([name])
+  @@index([status])
+}
+
+model ItemPhoto {
+  id          String   @id @default(uuid()) @db.UniqueIdentifier
+  url         String   @db.NVarChar(Max)
+  description String?  @db.NVarChar(255)
+  mimeType    String   @db.NVarChar(50)
+  size        Int
+  isPrimary   Boolean  @default(false)
+  itemId      String   @db.UniqueIdentifier
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  item        Item     @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([isPrimary])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model Layout {
+  id           String    @id @default(uuid()) @db.UniqueIdentifier
+  name         String    @db.NVarChar(255)
+  instructions String?
+  moveId       String?   @db.UniqueIdentifier
+  moveStopId   String?   @db.UniqueIdentifier
+  orientation  String    @default("origin") @db.NVarChar(50)
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime
+  move         Move?     @relation("MoveLayout", fields: [moveId], references: [id])
+  moveStop     MoveStop? @relation("MoveStopLayout", fields: [moveStopId], references: [id], onDelete: SetNull)
+  rooms        Room[]
+
+  @@index([moveId])
+  @@index([moveStopId])
+  @@index([orientation])
+  @@index([createdAt])
+}
+
+model MoveContact {
+  moveId     String   @default(uuid()) @db.UniqueIdentifier
+  contactId  String   @default(uuid()) @db.UniqueIdentifier
+  role       String   @db.NVarChar(50)
+  assignedAt DateTime @default(now())
+  move       Move     @relation(fields: [moveId], references: [id])
+
+  @@id([moveId, contactId])
+  @@index([assignedAt])
+  @@index([contactId])
+  @@index([moveId])
+  @@index([role])
+}
+
+model MoveEquipment {
+  moveId      String   @default(uuid()) @db.UniqueIdentifier
+  equipmentId String   @default(uuid()) @db.UniqueIdentifier
+  assignedAt  DateTime @default(now())
+  move        Move     @relation(fields: [moveId], references: [id])
+
+  @@id([moveId, equipmentId])
+  @@index([assignedAt])
+  @@index([equipmentId])
+  @@index([moveId])
+}
+
+model MoveSupply {
+  id        String   @id @default(cuid()) @db.UniqueIdentifier
+  moveId    String   @db.UniqueIdentifier
+  supplyId  String   @db.UniqueIdentifier
+  quantity  Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  
+  // Relations
+  move      Move     @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  supply    Supply   @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+
+  @@unique([moveId, supplyId])
+  @@index([moveId])
+  @@index([supplyId])
+}
+
+model MoveVehicle {
+  moveId     String   @default(uuid()) @db.UniqueIdentifier
+  vehicleId  String   @default(uuid()) @db.UniqueIdentifier
+  assignedAt DateTime @default(now())
+  move       Move     @relation(fields: [moveId], references: [id])
+
+  @@id([moveId, vehicleId])
+  @@index([assignedAt])
+  @@index([moveId])
+  @@index([vehicleId])
+}
+
+model Notification {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  title     String   @db.NVarChar(255)
+  message   String   @db.NVarChar(Max)
+  type      String   @db.NVarChar(50)
+  status    String   @db.NVarChar(50)
+  userId    String   @db.UniqueIdentifier
+  createdAt DateTime @default(now())
+  updatedAt DateTime
+
+  @@index([createdAt])
+  @@index([status])
+  @@index([title])
+  @@index([type])
+  @@index([userId])
+}
+
+model PasswordHistory {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  userId    String   @db.UniqueIdentifier
+  password  String   @db.NVarChar(255)
+  createdAt DateTime @default(now())
+
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model PasswordResetToken {
+  id         String   @id @default(uuid()) @db.UniqueIdentifier
+  identifier String   @unique @db.NVarChar(255)
+  token      String   @unique @db.NVarChar(255)
+  expires    DateTime
+  createdAt  DateTime @default(now())
+  userId     String?  @db.UniqueIdentifier
+
+  @@index([createdAt])
+  @@index([expires])
+  @@index([identifier])
+  @@index([token])
+  @@index([userId])
+}
+
+model QRCode {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  code      String   @unique @db.NVarChar(255)
+  moveId    String   @db.UniqueIdentifier
+  itemId    String?  @db.UniqueIdentifier
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  move      Move     @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  item      Item?    @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([code])
+  @@index([createdAt])
+  @@index([itemId])
+  @@index([moveId])
+}
+
+model Room {
+  id               String   @id @default(uuid()) @db.UniqueIdentifier
+  name             String   @db.NVarChar(255)
+  description      String?  @db.NVarChar(500)
+  layoutId         String   @db.UniqueIdentifier
+  createdAt        DateTime @default(now())
+  updatedAt        DateTime
+  layout           Layout   @relation(fields: [layoutId], references: [id])
+  originItems      Item[]   @relation("OriginRoomItems")
+  destinationItems Item[]   @relation("DestinationRoomItems")
+  stopItems        Item[]   @relation("StopRoomItems")
+
+  @@index([layoutId])
+  @@index([createdAt])
+}
+
+model Supply {
+  id              String              @id @default(cuid()) @db.UniqueIdentifier
+  companyId       String              @db.UniqueIdentifier
+  name            String              @db.NVarChar(255)
+  type            String?             @db.NVarChar(100)
+  quantity        Int?                @default(0)
+  unit            String?             @db.NVarChar(50)
+  minQuantity     Int?                @default(0)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  // Relations
+  company         Company             @relation(fields: [companyId], references: [id])
+  moves           CompanyMoveSupply[]
+  moveSupplies    MoveSupply[]
+
+  @@index([companyId])
+  @@index([type])
+}
+
+model Task {
+  id             String    @id @default(uuid()) @db.UniqueIdentifier
+  description    String?   @db.NVarChar(Max)
+  status         String    @default("pending") @db.NVarChar(50)
+  priority       String    @default("normal") @db.NVarChar(50)
+  dueDate        DateTime?
+  moveId         String    @db.UniqueIdentifier
+  userId         String    @db.UniqueIdentifier
+  assignedTo     String?   @db.UniqueIdentifier
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  name           String    @db.NVarChar(255)
+  move           Move      @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  createdBy      User      @relation("UserTasks", fields: [userId], references: [id])
+  assignedToUser User?     @relation("AssignedTasks", fields: [assignedTo], references: [id])
+
+  @@index([createdAt])
+  @@index([dueDate])
+  @@index([moveId])
+  @@index([priority])
+  @@index([status])
+  @@index([name])
+  @@index([userId])
+  @@index([assignedTo])
+}
+
+model UserAddress {
+  userId    String   @default(uuid()) @db.UniqueIdentifier
+  addressId String   @default(uuid()) @db.UniqueIdentifier
+  createdAt DateTime @default(now())
+
+  @@id([userId, addressId])
+  @@index([addressId])
+  @@index([createdAt])
+  @@index([userId])
+}
+
+model UserScannedQRCodes {
+  id        String   @id @default(uuid()) @db.UniqueIdentifier
+  userId    String   @db.UniqueIdentifier
+  qrCodeId  String   @db.UniqueIdentifier
+  scannedAt DateTime @default(now())
+
+  @@index([qrCodeId])
+  @@index([scannedAt])
+  @@index([userId])
+}
+
+model Vehicle {
+  id              String              @id @default(cuid()) @db.UniqueIdentifier
+  companyId       String              @db.UniqueIdentifier
+  name            String              @db.NVarChar(255)
+  type            String              @db.NVarChar(100)    @default("standard")
+  licensePlate    String              @db.NVarChar(50)
+  capacity        Int                 @default(0)
+  isAvailable     Boolean             @default(true)
+  createdAt       DateTime            @default(now())
+  updatedAt       DateTime            @updatedAt
+  
+  // Relations
+  company         Company             @relation(fields: [companyId], references: [id])
+  moves           CompanyMoveVehicle[]
+
+  @@index([companyId])
+  @@index([type])
+  @@index([isAvailable])
+}
+
+// Company Move Models
+model CompanyMove {
+  id                  String               @id @default(cuid()) @db.UniqueIdentifier
+  name                String               @db.NVarChar(255)
+  description         String?              @db.NVarChar(Max)
+  moveType            String               @db.NVarChar(50)
+  status              String               @default("PENDING") @db.NVarChar(50)
+  startDate           DateTime
+  endDate             DateTime?
+  clientName          String               @db.NVarChar(255)
+  clientEmail         String               @db.NVarChar(255)
+  clientPhone         String               @db.NVarChar(15)
+  estimatedBudget     Float?
+  priority            String               @default("MEDIUM") @db.NVarChar(50)
+  specialInstructions String?              @db.NVarChar(Max)
+  
+  // Organization and Creator
+  companyId           String               @db.UniqueIdentifier
+  createdById         String               @db.UniqueIdentifier
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  // Addresses
+  fromAddressId       String               @unique @db.UniqueIdentifier
+  toAddressId         String               @unique @db.UniqueIdentifier
+
+  // Relations
+  fromAddress         Address              @relation("MoveFromAddress", fields: [fromAddressId], references: [id], onDelete: Restrict)
+  toAddress           Address              @relation("MoveToAddress", fields: [toAddressId], references: [id], onDelete: Restrict)
+  tasks               CompanyMoveTask[]
+  layouts             CompanyMoveLayout[]
+  itemLists           CompanyItemList[]
+  employees           CompanyMoveEmployee[]
+  vehicles            CompanyMoveVehicle[]
+  equipment           CompanyMoveEquipment[]
+  supplies            CompanyMoveSupply[]
+
+  @@index([companyId])
+  @@index([status])
+  @@index([startDate])
+  @@index([createdById])
+  @@index([moveType])
+  @@index([priority])
+}
+
+model CompanyItemList {
+  id          String        @id @default(cuid())
+  name        String        @db.NVarChar(255)
+  description String?       @db.NVarChar(Max)
+  moveId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  move        CompanyMove   @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  items       CompanyItem[]
+
+  @@index([moveId])
+  @@index([name])
+}
+
+model CompanyItem {
+  id                  String          @id @default(cuid())
+  name               String          @db.NVarChar(255)
+  description        String?         @db.NVarChar(Max)
+  weight             Float?
+  value              Float?
+  isFragile          Boolean         @default(false)
+  specialInstructions String?        @db.NVarChar(Max)
+  originRoomId       String?
+  destinationRoomId  String?
+  stopRoomId         String?
+  createdAt          DateTime        @default(now())
+  updatedAt          DateTime        @updatedAt
+  itemListId         String
+  packingStatus      String          @default("UNPACKED") @db.NVarChar(50)
+  qrCode             String?         @db.NVarChar(255)
+  
+  // Relations
+  itemList           CompanyItemList @relation(fields: [itemListId], references: [id], onDelete: Cascade)
+  originRoom         CompanyRoom?    @relation("OriginRoomItems", fields: [originRoomId], references: [id], onDelete: SetNull)
+  destinationRoom    CompanyRoom?    @relation("DestinationRoomItems", fields: [destinationRoomId], references: [id], onDelete: SetNull)
+  stopRoom           CompanyRoom?    @relation("StopRoomItems", fields: [stopRoomId], references: [id], onDelete: SetNull)
+  photos             CompanyItemPhoto[]
+
+  @@index([itemListId])
+  @@index([originRoomId])
+  @@index([destinationRoomId])
+  @@index([stopRoomId])
+  @@index([name])
+  @@index([packingStatus])
+}
+
+model CompanyItemPhoto {
+  id          String        @id @default(cuid())
+  url         String        @db.NVarChar(Max)
+  description String?       @db.NVarChar(255)
+  mimeType    String        @db.NVarChar(50)
+  size        Int
+  isPrimary   Boolean       @default(false)
+  itemId      String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  item        CompanyItem   @relation(fields: [itemId], references: [id], onDelete: Cascade)
+
+  @@index([itemId])
+  @@index([isPrimary])
+  @@index([createdAt])
+  @@index([updatedAt])
+}
+
+model CompanyMoveLayout {
+  id          String        @id @default(cuid())
+  name        String        @db.NVarChar(255)
+  instructions String?      @db.NVarChar(Max)
+  moveId      String
+  orientation String        @default("ORIGIN") @db.NVarChar(50)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  
+  // Relations
+  move        CompanyMove   @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  rooms       CompanyRoom[]
+
+  @@index([moveId])
+  @@index([name])
+  @@index([orientation])
+}
+
+model CompanyRoom {
+  id               String           @id @default(cuid())
+  name             String          @db.NVarChar(255)
+  description      String?         @db.NVarChar(Max)
+  layoutId         String
+  createdAt        DateTime         @default(now())
+  updatedAt        DateTime         @updatedAt
+  
+  // Relations
+  layout           CompanyMoveLayout @relation(fields: [layoutId], references: [id], onDelete: Cascade)
+  originItems      CompanyItem[]    @relation("OriginRoomItems")
+  destinationItems CompanyItem[]    @relation("DestinationRoomItems")
+  stopItems        CompanyItem[]    @relation("StopRoomItems")
+
+  @@index([layoutId])
+  @@index([name])
+}
+
+model CompanyMoveTask {
+  id          String      @id @default(cuid())
+  moveId      String
+  name        String      @db.NVarChar(255)
+  description String?     @db.NVarChar(Max)
+  status      String      @default("TODO") @db.NVarChar(50)
+  priority    String      @default("MEDIUM") @db.NVarChar(50)
+  startDate   DateTime?
+  endDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+  assignedToId String?
+  
+  // Relations
+  move        CompanyMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  assignedTo  Employee?   @relation(fields: [assignedToId], references: [id], onDelete: SetNull)
+
+  @@index([moveId])
+  @@index([status])
+  @@index([priority])
+  @@index([assignedToId])
+  @@index([name])
+}
+
+model Employee {
+  id              String                @id @default(cuid()) @db.UniqueIdentifier
+  companyId       String                @db.UniqueIdentifier
+  name            String                @db.NVarChar(255)
+  email           String                @db.NVarChar(255)
+  phone           String?               @db.NVarChar(15)
+  role            String                @db.NVarChar(100)
+  isActive        Boolean               @default(true)
+  createdAt       DateTime              @default(now())
+  updatedAt       DateTime              @updatedAt
+  
+  // Relations
+  tasks           CompanyMoveTask[]
+  moves           CompanyMoveEmployee[]
+
+  @@index([companyId])
+  @@index([email])
+  @@index([role])
+  @@index([isActive])
+}
+
+model CompanyMoveEmployee {
+  id          String      @id @default(cuid()) @db.UniqueIdentifier
+  moveId      String      @db.UniqueIdentifier
+  employeeId  String      @db.UniqueIdentifier
+  role        String      @db.NVarChar(100)
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  move        CompanyMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  employee    Employee    @relation(fields: [employeeId], references: [id], onDelete: Cascade)
+
+  @@unique([moveId, employeeId])
+  @@index([moveId])
+  @@index([employeeId])
+  @@index([role])
+}
+
+model CompanyMoveVehicle {
+  id          String      @id @default(cuid()) @db.UniqueIdentifier
+  moveId      String      @db.UniqueIdentifier
+  vehicleId   String      @db.UniqueIdentifier
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  move        CompanyMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  vehicle     Vehicle     @relation(fields: [vehicleId], references: [id], onDelete: Cascade)
+
+  @@unique([moveId, vehicleId])
+  @@index([moveId])
+  @@index([vehicleId])
+}
+
+model CompanyMoveEquipment {
+  id          String      @id @default(cuid()) @db.UniqueIdentifier
+  moveId      String      @db.UniqueIdentifier
+  equipmentId String      @db.UniqueIdentifier
+  quantity    Int         @default(1)
+  startDate   DateTime
+  endDate     DateTime?
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  move        CompanyMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  equipment   Equipment   @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@unique([moveId, equipmentId])
+  @@index([moveId])
+  @@index([equipmentId])
+}
+
+model CompanyMoveSupply {
+  id          String      @id @default(cuid()) @db.UniqueIdentifier
+  moveId      String      @db.UniqueIdentifier
+  supplyId    String      @db.UniqueIdentifier
+  quantity    Int         @default(0)
+  createdAt   DateTime    @default(now())
+  updatedAt   DateTime    @updatedAt
+
+  // Relations
+  move        CompanyMove @relation(fields: [moveId], references: [id], onDelete: Cascade)
+  supply      Supply      @relation(fields: [supplyId], references: [id], onDelete: Cascade)
+
+  @@unique([moveId, supplyId])
+  @@index([moveId])
+  @@index([supplyId])
+}

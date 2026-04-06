@@ -1,0 +1,22 @@
+'use server'
+
+export async function createItemLists({
+  name,
+  moveId,
+  path,
+}: {
+  name: string;
+  moveId: string;
+  path: string;
+}) {
+  // In a real application, you would perform database operations here
+  // to create the item list.
+  console.log(`Creating item list "${name}" for move ${moveId}`);
+
+  // Simulate success
+  return {
+    success: true,
+    message: `Item list "${name}" created successfully for move ${moveId}.`,
+  };
+}
+
