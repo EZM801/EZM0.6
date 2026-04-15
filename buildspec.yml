@@ -1,19 +1,17 @@
 version: 0.2
+
 env:
   variables:
-    ImageName: simple-docker-service-120458a1f377
+    IMAGE_NAME: "simple-docker-service-120458a1f377"
+
 phases:
   pre_build:
     commands:
-      - aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 723858002427.dkr.ecr.us-east-1.amazonaws.com
+      - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 723858002427.dkr.ecr.us-east-1.amazonaws.com"
   build:
     commands:
-      # Build using Dockerfile at repo root; if your Dockerfile is under EZM0.5/, change to: -f EZM0.5/Dockerfile EZM0.5
-      - docker build -t $ImageName -f ./Dockerfile .
-      - docker tag $ImageName:latest 723858002427.dkr.ecr.us-east-1.amazonaws.com/$ImageName:latest
+      - "docker build -t $IMAGE_NAME -f ./Dockerfile ."
+      - "docker tag $IMAGE_NAME:latest 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
   post_build:
     commands:
-      - docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$ImageName:latest
-artifacts:
-  files:
-    - '**/*'
+      - "docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
