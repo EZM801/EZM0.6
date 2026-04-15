@@ -2,11 +2,13 @@
 FROM public.ecr.aws/docker/library/node:18-alpine AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
-RUN apk add --no-cache libc6-compat
+RUN apk add --no-cache libc6-compat openssl
 
 # ---- deps ----
 FROM base AS deps
 COPY package*.json ./
+# Schema must exist before npm ci (postinstall runs prisma generate)
+COPY prisma ./prisma
 RUN npm ci
 
 # ---- build ----

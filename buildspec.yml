@@ -14,4 +14,4 @@ phases:
       - "docker tag $IMAGE_NAME:latest 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
   post_build:
     commands:
-      - "if docker image inspect $IMAGE_NAME:latest > /dev/null 2>&1; then docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest; else echo 'Skipping push: image not built'; exit 1; fi"
+      - "docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
