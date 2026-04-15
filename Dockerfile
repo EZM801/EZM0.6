@@ -1,5 +1,5 @@
 # ---- base image (common) ----
-FROM node:18-alpine AS base
+FROM public.ecr.aws/docker/library/node:18-alpine AS base
 WORKDIR /app
 ENV NEXT_TELEMETRY_DISABLED=1
 RUN apk add --no-cache libc6-compat
@@ -20,7 +20,7 @@ RUN npx prisma generate
 RUN npm run build
 
 # ---- runtime (standalone) ----
-FROM node:18-alpine AS runner
+FROM public.ecr.aws/docker/library/node:18-alpine AS runner
 WORKDIR /app
 ENV NODE_ENV=production
 ENV PORT=3000
