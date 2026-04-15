@@ -19,16 +19,16 @@ export async function GET() {
       equipmentCount,
       pendingTasks
     ] = await Promise.all([
-      prisma.Move.count({
+      prisma.move.count({
         where: { companyId: session.user.companyId }
       }),
-      prisma.User.count({
+      prisma.user.count({
         where: { 
           companyId: session.user.companyId,
           isActive: true
         }
       }),
-      prisma.Equipment.count({
+      prisma.equipment.count({
         where: { companyId: session.user.companyId }
       }),
       prisma.tasks.count({

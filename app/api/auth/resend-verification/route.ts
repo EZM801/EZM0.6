@@ -14,7 +14,7 @@ export async function POST(request: Request) {
     }
 
     // Check if user exists and is not verified
-    const user = await prisma.User.findUnique({
+    const user = await prisma.user.findUnique({
       where: { email }
     })
 

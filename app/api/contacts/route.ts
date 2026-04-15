@@ -35,7 +35,7 @@ export async function GET(request: Request) {
     const type = searchParams.get("type");
     const companyId = searchParams.get("companyId");
 
-    const contacts = await prisma.Contact.findMany({
+    const contacts = await prisma.contact.findMany({
       where: {
         userId: session.user.id,
         ...(moveId && { moveId }),
@@ -75,7 +75,7 @@ export async function POST(request: Request) {
 
     // Verify move access if moveId is provided
     if (validatedData.moveId) {
-      const move = await prisma.Move.findFirst({
+      const move = await prisma.move.findFirst({
         where: {
           id: validatedData.moveId,
           OR: [
@@ -117,7 +117,7 @@ export async function POST(request: Request) {
     // Create address if provided
     let addressId;
     if (validatedData.address) {
-      const address = await prisma.Address.create({
+      const address = await prisma.address.create({
         data: {
           id: uuidv4(),
           ...validatedData.address
@@ -127,7 +127,7 @@ export async function POST(request: Request) {
     }
 
     // Create contact
-    const contact = await prisma.Contact.create({
+    const contact = await prisma.contact.create({
       data: {
         id: uuidv4(),
         firstName: validatedData.firstName,
@@ -179,7 +179,7 @@ export async function PATCH(request: Request) {
     }
 
     // Verify contact access
-    const contact = await prisma.Contact.findFirst({
+    const contact = await prisma.contact.findFirst({
       where: {
         id: contactId,
         userId: session.user.id
@@ -196,7 +196,7 @@ export async function PATCH(request: Request) {
     // Update address if provided
     let addressId = contact.addressId;
     if (address) {
-      const updatedAddress = await prisma.Address.update({
+      const updatedAddress = await prisma.address.update({
         where: { id: contact.addressId || uuidv4() },
         data: address
       });
@@ -204,7 +204,7 @@ export async function PATCH(request: Request) {
     }
 
     // Update contact
-    const updatedContact = await prisma.Contact.update({
+    const updatedContact = await prisma.contact.update({
       where: { id: contactId },
       data: {
         ...(firstName && { firstName }),
@@ -251,7 +251,7 @@ export async function DELETE(request: Request) {
     }
 
     // Verify contact access
-    const contact = await prisma.Contact.findFirst({
+    const contact = await prisma.contact.findFirst({
       where: {
         id: contactId,
         userId: session.user.id
@@ -266,7 +266,7 @@ export async function DELETE(request: Request) {
     }
 
     // Delete contact
-    const deletedContact = await prisma.Contact.delete({
+    const deletedContact = await prisma.contact.delete({
       where: { id: contactId }
     });
 

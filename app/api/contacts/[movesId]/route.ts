@@ -13,7 +13,7 @@ export async function GET(
       return NextResponse.json({ error: "Unauthorized" }, { status: 401 })
     }
 
-    const contact = await prisma.Contact.findUnique({
+    const contact = await prisma.contact.findUnique({
       where: { id: params.moveId }
     })
 

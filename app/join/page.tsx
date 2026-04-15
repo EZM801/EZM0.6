@@ -1,6 +1,6 @@
 "use client"
 
-import { useEffect, useState } from "react"
+import { Suspense, useEffect, useState } from "react"
 import { useSearchParams } from "next/navigation"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
@@ -16,7 +16,7 @@ interface JoinData {
   expires: string
 }
 
-export default function JoinPage() {
+function JoinPageContent() {
   const searchParams = useSearchParams()
   const router = useRouter()
   const [joinData, setJoinData] = useState<JoinData | null>(null)
@@ -154,4 +154,18 @@ export default function JoinPage() {
       </CardContent>
     </Card>
   )
-} 
+}
+
+export default function JoinPage() {
+  return (
+    <Suspense
+      fallback={
+        <div className="mx-auto mt-8 w-full max-w-md rounded-lg border p-6 text-center text-muted-foreground">
+          Loading invitation…
+        </div>
+      }
+    >
+      <JoinPageContent />
+    </Suspense>
+  )
+}

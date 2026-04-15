@@ -26,7 +26,7 @@ export async function POST(req: Request) {
     const validatedData = createRoomSchema.parse(body)
 
     // Verify move access
-    const move = await prisma.Move.findFirst({
+    const move = await prisma.move.findFirst({
       where: {
         id: validatedData.moveId,
         userId: session.user.id
@@ -69,7 +69,7 @@ export async function PATCH(req: Request) {
     const validatedData = createRoomSchema.parse(body)
 
     // Verify move access
-    const move = await prisma.Move.findFirst({
+    const move = await prisma.move.findFirst({
       where: {
         id: validatedData.moveId,
         userId: session.user.id
@@ -114,7 +114,7 @@ export async function DELETE(req: Request) {
     const { moveId, layoutId } = body
 
     // Verify move access
-    const move = await prisma.Move.findFirst({
+    const move = await prisma.move.findFirst({
       where: {
         id: moveId,
         userId: session.user.id

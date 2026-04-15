@@ -23,7 +23,7 @@ export async function POST(request: Request) {
 
     // For items, verify the code exists and is pre-printed
     if (type === "item") {
-      const existingCode = await prisma.QRCode.findUnique({
+      const existingCode = await prisma.qRCode.findUnique({
         where: { code },
       })
 
@@ -93,7 +93,7 @@ export async function POST(request: Request) {
     }
 
     // Create or update QR code
-    const qrCode = await prisma.QRCode.upsert({
+    const qrCode = await prisma.qRCode.upsert({
       where: { code },
       update: {
         type,

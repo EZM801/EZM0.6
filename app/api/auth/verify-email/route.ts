@@ -32,7 +32,7 @@ export async function GET(request: Request) {
     }
 
     // Update user's email verification status
-    await prisma.User.update({
+    await prisma.user.update({
       where: { email: verificationToken.identifier },
       data: { emailVerified: new Date() }
     })
