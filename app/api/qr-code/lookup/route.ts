@@ -3,6 +3,8 @@ import { prisma } from "@/app/lib/prisma"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/app/lib/auth"
 
+export const dynamic = "force-dynamic"
+
 export async function GET(request: Request) {
   try {
     const session = await getServerSession(authOptions)
@@ -29,27 +31,20 @@ export async function GET(request: Request) {
         move: {
           select: {
             userId: true,
-            title: true,
-            status: true
-          }
+            name: true,
+            status: true,
+          },
         },
         item: {
           include: {
             itemList: {
               select: {
                 name: true,
-                room: true
-              }
-            }
-          }
+              },
+            },
+          },
         },
-        inventory: {
-          select: {
-            name: true,
-            quantity: true
-          }
-        }
-      }
+      },
     })
 
     if (!qrCode) {
@@ -68,7 +63,3 @@ export async function GET(request: Request) {
     )
   }
 }
-
-function formatAddress(address: any) {
-  return `${address.street}, ${address.city}, ${address.state} ${address.zipCode}`
-} 

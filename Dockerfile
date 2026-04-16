@@ -14,6 +14,7 @@ RUN npm ci
 # ---- build ----
 FROM base AS builder
 WORKDIR /app
+ENV NODE_OPTIONS="--max-old-space-size=6144"
 COPY --from=deps /app/node_modules ./node_modules
 COPY . .
 # Generate Prisma client for runtime usage

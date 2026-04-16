@@ -42,7 +42,7 @@ function ErrorContent() {
       break
     case "Callback":
       errorMessage = "Callback error"
-      errorDescription = "Error in the OAuth callback handler."
+      errorDescription = "There was an error in the OAuth callback handler."
       break
     case "OAuthAccountNotLinked":
       errorMessage = "OAuth account not linked"
@@ -89,4 +89,4 @@ export default function AuthErrorPage() {
       </Suspense>
     </div>
   )
-} 
+}

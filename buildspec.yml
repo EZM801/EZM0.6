@@ -10,8 +10,15 @@ phases:
       - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 723858002427.dkr.ecr.us-east-1.amazonaws.com"
   build:
     commands:
-      - "docker build -t $IMAGE_NAME -f ./Dockerfile ."
-      - "docker tag $IMAGE_NAME:latest 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
+      - |
+        set -euo pipefail
+        docker build -t "$IMAGE_NAME" -f ./Dockerfile .
+        docker tag "$IMAGE_NAME:latest" "723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
   post_build:
     commands:
-      - "docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
+      - |
+        if [ "${CODEBUILD_BUILD_SUCCEEDING:-0}" != "1" ]; then
+          echo "Skipping ECR push: a previous phase failed (see BUILD logs above)."
+          exit 0
+        fi
+        docker push "723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
