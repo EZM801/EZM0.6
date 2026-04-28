@@ -1,0 +1,29 @@
+# AWS App Runner configuration (source-based services only).
+# Replace the DATABASE_URL secret ARN with your real Secrets Manager ARN (full ARN including suffix).
+# Note: App Runner has an availability change for new customers — see AWS docs if you sign up after Apr 30, 2026.
+#
+# IAM: the App Runner instance role must allow secretsmanager:GetSecretValue on that secret.
+
+version: 1.0
+runtime: nodejs18
+
+build:
+  commands:
+    build:
+      - npm ci
+      - npm run build
+
+run:
+  runtime-version: "18"
+  command: npm start
+  network:
+    port: 3000
+    # Optional: also expose the listen port under a second env var (App Runner always sets PORT too).
+    # env: APP_PORT
+  env:
+    - name: NODE_ENV
+      value: "production"
+    # Do not set PORT here — it is reserved / set by App Runner from network.port.
+  secrets:
+    - name: DATABASE_URL
+      value-from: "arn:aws:secretsmanager:us-east-1:YOUR_ACCOUNT_ID:secret:YOUR_SECRET_NAME-XXXXXX"
