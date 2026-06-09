@@ -1,17 +1,37 @@
+# Create buildspec.yml
+cat > buildspec.yml << 'EOF'
 version: 0.2
 
-env:
-  variables:
-    IMAGE_NAME: "simple-docker-service-120458a1f377"
-
 phases:
+  install:
+    runtime-versions:
+      nodejs: 18
+    commands:
+      - echo Installing dependencies...
+      - npm install
+      - npm install -g prisma
+      
   pre_build:
     commands:
-      - "aws ecr get-login-password --region us-east-1 | docker login --username AWS --password-stdin 723858002427.dkr.ecr.us-east-1.amazonaws.com"
+      - echo Setting up database connection...
+      - echo "DATABASE_URL=$DATABASE_URL" > .env
+      - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env
+      - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env
+      
   build:
     commands:
-      - "docker build -t $IMAGE_NAME -f ./Dockerfile ."
-      - "docker tag $IMAGE_NAME:latest 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
+      - echo Building the application...
+      - npm run build
+      - echo Deploying database schema...
+      - npx prisma db push
+      - npx prisma generate
+      
   post_build:
     commands:
-      - "docker push 723858002427.dkr.ecr.us-east-1.amazonaws.com/$IMAGE_NAME:latest"
+      - echo Build completed successfully
+      
+artifacts:
+  files:
+    - '**/*'
+  name: ezm-build-artifacts
+EOF
