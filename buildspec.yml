@@ -1,6 +1,4 @@
-
 version: 0.2
-
 phases:
   install:
     runtime-versions:
@@ -8,29 +6,18 @@ phases:
     commands:
       - echo Installing dependencies...
       - npm install
-      - npm install -g prisma
-      
   pre_build:
     commands:
-      - echo Setting up database connection...
-      - echo "DATABASE_URL=$DATABASE_URL" > .env
-      - echo "NEXTAUTH_SECRET=$NEXTAUTH_SECRET" >> .env
-      - echo "NEXTAUTH_URL=$NEXTAUTH_URL" >> .env
-      
+      - echo Pre-build phase started on `date`
+      - npx prisma generate
   build:
     commands:
-      - echo Building the application...
+      - echo Build started on `date`
       - npm run build
-      - echo Deploying database schema...
-      - npx prisma db push
-      - npx prisma generate
-      
   post_build:
     commands:
-      - echo Build completed successfully
-      
+      - echo Build completed on `date`
 artifacts:
   files:
     - '**/*'
   name: ezm-build-artifacts
-EOF
